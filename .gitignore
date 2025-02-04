@@ -1,0 +1,18 @@
+# Ignore target directory (compiled output)
+target/
+
+# Ignore build artifacts and temporary files
+**/*.rs.bk
+
+# Rust-specific tooling files
+/.cargo/
+/Cargo.lock
+
+# IDE/editor-specific files
+# VS Code settings
+.vscode/
+
+
+
+# Ignore MacOS system files
+.DS_Store
