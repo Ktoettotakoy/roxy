@@ -16,7 +16,7 @@ pub fn listen_to_all_traffic_on(port: u16) {
                 println!("New connection!");
 
                 // Create a thread that terminates when the passed function returns
-                thread::spawn(move || handle_client_80(stream));
+                thread::spawn(move || handle_client_traffic(stream));
             }
             Err(e) => {
                 println!("Connection error: {}", e);
@@ -25,49 +25,76 @@ pub fn listen_to_all_traffic_on(port: u16) {
     }
 }
 
-fn handle_client_80(mut stream: TcpStream) {
-    let mut buffer = [0u8; 4096]; // Initialize the buffer with 4096 bytes
+fn handle_client_traffic(mut client_stream: TcpStream) {
+    let mut client_request_buffer = [0u8; 4096]; // Initialize buffer
 
-    // Attempt to read data from the client stream
-    match stream.read(&mut buffer) {
+    match client_stream.read(&mut client_request_buffer) {
         Ok(bytes_read) => {
             if bytes_read == 0 {
-                // If nothing is read, it means the client disconnected
                 println!("Client disconnected.");
-                return; // Exit the thread if no data is read
+                return;
             }
 
-            let request_str = String::from_utf8_lossy(&buffer[..bytes_read]);
+            let request_str = String::from_utf8_lossy(&client_request_buffer[..bytes_read]);
             println!("\nPeeked HTTP request:\n{}", request_str);
 
-            // Extract the Host header to determine where to forward the request
-            if let Some(host) = extract_host(&request_str) {
-                println!("Forwarding request to: {}", host);
-
-                // Connect to the real server (host on port 80)
-                if let Ok(mut server_stream) = TcpStream::connect((host.as_str(), 80)) {
-                    // Forward the request to the real server
-                    server_stream.write_all(&buffer[..bytes_read]).expect("Failed to send request to the real server");
-
-                    // Read the response from the real web server
-                    let mut server_response = [0u8; 4096];
-                    match server_stream.read(&mut server_response) {
-                        Ok(response_size) => {
-                            // Forward the server response back to the client (browser)
-                            stream.write_all(&server_response[..response_size]).expect("Failed to forward response to client");
-                            println!("Request forwarded back to: {}", host);
-                        }
-                        Err(e) => {
-                            println!("Failed to read server response: {}", e);
-                        }
-                    }
-                } else {
-                    println!("Failed to connect to the real server");
-                }
+            if let Some(mut server_stream) = send_request_to_host_80(&request_str, &client_request_buffer[..bytes_read]) {
+                send_response_to_client(&mut client_stream, &mut server_stream);
             }
         }
         Err(e) => {
             println!("Failed to read from stream: {}", e);
+        }
+    }
+}
+
+/// sends request from client (browser, my machine) to host (desired webpage)
+///
+/// Returns an open `TcpStream` to the server if the connection is successful.
+fn send_request_to_host_80(request_str: &str, buffer: &[u8]) -> Option<TcpStream> {
+    if let Some(host) = extract_host(request_str) {
+        println!("Forwarding request from client to Roxy to: {}", host);
+
+        // Attempt to connect to the web server
+        match TcpStream::connect((host.as_str(), 80)) {
+            Ok(mut server_stream) => {
+                // Send request to the server
+                if let Err(e) = server_stream.write_all(buffer) {
+                    println!("Failed to send request to server: {}", e);
+                    return None;
+                }
+                Some(server_stream)
+            }
+            Err(e) => {
+                println!("Failed to connect to the real server: {}", e);
+                None
+            }
+        }
+    } else {
+        println!("Failed to extract host from HTTP header.");
+        None
+    }
+}
+
+/// sends response from server (webpage on the Internet) to client (browser, my machine)
+fn send_response_to_client(client_stream: &mut TcpStream, server_stream: &mut TcpStream) {
+    let mut server_response_buffer = [0u8; 4096];
+
+    match server_stream.read(&mut server_response_buffer) {
+        Ok(response_size) => {
+            if response_size == 0 {
+                println!("Server closed the connection.");
+                return;
+            }
+
+            if let Err(e) = client_stream.write_all(&server_response_buffer[..response_size]) {
+                println!("Failed to forward response to client: {}", e);
+            } else {
+                println!("Response successfully forwarded from server to Roxy to client.");
+            }
+        }
+        Err(e) => {
+            println!("Failed to read server response: {}", e);
         }
     }
 }
