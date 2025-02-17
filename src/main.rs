@@ -7,7 +7,7 @@ fn main() {
     out_starting_message();
 
     // Start the proxy server thread
-    let proxy_thread = thread::spawn(move || listen_to_all_traffic_on(80));
+    let proxy_thread = thread::spawn(move || listen_to_all_traffic_on(6505));
 
     // Start a client thread for testing, not yet implemented correctly
     // let client_thread = thread::spawn(move || send_get_every_5_seconds_to_port(80));
