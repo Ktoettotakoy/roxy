@@ -2,6 +2,12 @@ use std::net::TcpStream;
 use std::io::{Write, Read};
 
 pub fn forward_http_request(host: String, buffer: &[u8], mut client_stream: TcpStream) {
+
+    // if should_block_request
+
+    // if cached
+
+
     println!("Forwarding HTTP request to: {}", host);
 
     match TcpStream::connect((host.as_str(), 80)) {
