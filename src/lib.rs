@@ -3,7 +3,15 @@ pub mod cli {
 }
 
 pub mod proxy {
-    pub mod proxy;
+    pub mod listener;
+    mod handler;
+    mod forwarder;
+    mod tunnel;
+}
+
+pub mod utils{
+    pub mod logging;
+    pub mod parsing;
 }
 
 pub mod client {
