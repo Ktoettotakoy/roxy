@@ -25,3 +25,6 @@ src/
 │   ├── parsing.rs            # Parses HTTP requests, extracts hosts
 │   ├── logging.rs            # Handles logging and debugging
 ```
+
+look at later, refactor to this level!
+https://dzone.com/articles/writing-a-modern-https-tunnel-in-rust?fromrel=true
