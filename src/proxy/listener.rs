@@ -1,8 +1,11 @@
 use std::net::TcpListener;
 use std::thread;
-use super::handler::handle_client_connection;
+use std::sync::Arc;
 
-pub fn start_proxy(port: u16) {
+use super::handler::handle_client_connection;
+use crate::utils::host_filtering::Blacklist;
+
+pub fn start_proxy(port: u16, blacklist: Arc<Blacklist>) {
     let listener = TcpListener::bind(("0.0.0.0", port)).expect("Failed to bind to port");
     println!("Listening on port {}...", port);
 
@@ -11,7 +14,9 @@ pub fn start_proxy(port: u16) {
         match stream {
             Ok(stream) => {
                 println!("New connection: {}!", connection_counter);
-                thread::spawn(move || handle_client_connection(stream));
+                // Arc Clone to use in thread
+                let blacklist_clone = Arc::clone(&blacklist);
+                thread::spawn(move || handle_client_connection(stream, blacklist_clone));
                 connection_counter += 1;
             }
             Err(e) => {

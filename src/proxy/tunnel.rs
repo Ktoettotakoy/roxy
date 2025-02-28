@@ -5,6 +5,9 @@ use std::sync::{Arc,Mutex};
 use crate::utils::parsing::extract_host;
 
 pub fn handle_https_tunnel(request_str: &str, mut client_stream: TcpStream) {
+
+// think caching
+
     if let Some(host) = extract_host(request_str) {
         println!("Handling CONNECT request to {}", host);
 

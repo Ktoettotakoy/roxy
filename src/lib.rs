@@ -12,6 +12,8 @@ pub mod proxy {
 pub mod utils{
     pub mod logging;
     pub mod parsing;
+    pub mod host_filtering;
+    pub mod responses;
 }
 
 pub mod client {
