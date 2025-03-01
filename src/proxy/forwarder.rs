@@ -8,7 +8,7 @@ pub fn forward_http_request(host: String, buffer: &[u8], mut client_stream: TcpS
 
     println!("Forwarding HTTP request to: {}", host);
 
-    match TcpStream::connect((host.as_str(), 80)) {
+    match TcpStream::connect(&host) {
         Ok(mut server_stream) => {
             if let Err(e) = server_stream.write_all(buffer) {
                 println!("Failed to send request to server: {}", e);

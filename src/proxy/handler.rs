@@ -10,7 +10,7 @@ use crate::utils::responses::send_403_forbidden;
 use crate::utils::host_filtering::Blacklist;
 
 pub fn handle_client_connection(mut client_stream: TcpStream, blacklist: Arc<Blacklist>) {
-    let mut buffer = [0u8; 4096];
+    let mut buffer = [0u8; 8192];
 
     match client_stream.read(&mut buffer) {
         Ok(bytes_read) => {
@@ -22,26 +22,36 @@ pub fn handle_client_connection(mut client_stream: TcpStream, blacklist: Arc<Bla
             let request_str = String::from_utf8_lossy(&buffer[..bytes_read]);
             println!("\nPeeked HTTP/S request:\n{}", request_str);
 
-            // checking for blocked URLs
-            // Extract host and check blacklist
-            let host: String = extract_host(&request_str).expect("Error retrieving host LINE 25 HANDLER");
-            if blacklist.has(&host) {
-                println!("Host '{}' is blacklisted", host);
-                send_403_forbidden(&mut client_stream);
-                return;
-            }
+            // Extract host first
+            match extract_host(&request_str) {
+                Some(host) => {
+                    // Check blacklist
+                    if blacklist.has(&host) {
+                        println!("Host '{}' is blacklisted", host);
+                        send_403_forbidden(&mut client_stream);
 
-            // here we have to care about 2 cases:
-            // we create an https tunnel
-            // we have a http request
-            if request_str.starts_with("CONNECT") {
-                handle_https_tunnel(&request_str, client_stream);
-            } else if let Some(host) = extract_host(&request_str) {
-                forward_http_request(host, &buffer[..bytes_read], client_stream);
+                        // Close client connection
+                        let _ = client_stream.shutdown(std::net::Shutdown::Both);
+                        return;
+                    }
+
+                    // Process based on request type
+                    if request_str.starts_with("CONNECT") {
+                        let _ = handle_https_tunnel(&request_str, client_stream);
+                    } else {
+                        forward_http_request(host, &buffer[..bytes_read], client_stream);
+                    }
+                },
+                None => {
+                    println!("Failed to extract host from request");
+                    // Maybe send a 400 Bad Request response here
+                    let _ = client_stream.shutdown(std::net::Shutdown::Both);
+                }
             }
-        }
+        },
         Err(e) => {
             println!("Failed to read from stream: {}", e);
+            let _ = client_stream.shutdown(std::net::Shutdown::Both);
         }
     }
 }
