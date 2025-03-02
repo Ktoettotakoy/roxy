@@ -4,16 +4,12 @@ use std::sync::Arc;
 
 use super::handler::handle_client_connection;
 use crate::utils::host_filtering::Blacklist;
-use super::cache::HttpCache;
+use crate::proxy::cache::HttpCache;
 
 
-// , cache: Arc<HttpCache>
-pub fn start_proxy(port: u16, blacklist: Arc<Blacklist>) {
+pub fn start_proxy(port: u16, blacklist: Arc<Blacklist>, cache: Arc<HttpCache>) {
     let listener = TcpListener::bind(("0.0.0.0", port)).expect("Failed to bind to port");
     println!("Listening on port {}...", port);
-
-    // init the cache
-    let cache = Arc::new(HttpCache::new());
 
     let mut connection_counter: u32 = 0;
     for stream in listener.incoming() {

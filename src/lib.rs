@@ -7,7 +7,7 @@ pub mod proxy {
     mod handler;
     mod http;
     mod https;
-    mod cache;
+    pub mod cache;
 }
 
 pub mod utils{

@@ -5,7 +5,7 @@ use std::io;
 
 use std::time::Duration;
 use std::io::Read;
-
+use std::io::ErrorKind;
 
 use crate::utils::parsing::extract_host;
 
@@ -59,9 +59,17 @@ fn tunnel_data(mut client_stream: TcpStream, mut server_stream: TcpStream) -> io
                         break;
                     }
                 },
-                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                    thread::sleep(Duration::from_millis(10));
+                Err(ref e) if e.kind() == ErrorKind::WouldBlock => {
+                    thread::sleep(Duration::from_millis(10)); // Wait and retry
                     continue;
+                },
+                Err(ref e) if e.kind() == ErrorKind::BrokenPipe => {
+                    println!("Client disconnected, stopping write.");
+                    break;
+                },
+                Err(ref e) if e.kind() == ErrorKind::ConnectionReset => {
+                    println!("Client closed connection abruptly.");
+                    break;
                 },
                 Err(e) => {
                     println!("Error reading from client: {}", e);
@@ -81,9 +89,17 @@ fn tunnel_data(mut client_stream: TcpStream, mut server_stream: TcpStream) -> io
                     break;
                 }
             },
-            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                thread::sleep(Duration::from_millis(10));
+            Err(ref e) if e.kind() == ErrorKind::WouldBlock => {
+                thread::sleep(Duration::from_millis(10)); // Wait and retry
                 continue;
+            },
+            Err(ref e) if e.kind() == ErrorKind::BrokenPipe => {
+                println!("Client disconnected, stopping write.");
+                break;
+            },
+            Err(ref e) if e.kind() == ErrorKind::ConnectionReset => {
+                println!("Client closed connection abruptly.");
+                break;
             },
             Err(e) => {
                 println!("Error reading from server: {}", e);
