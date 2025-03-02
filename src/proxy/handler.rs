@@ -2,14 +2,17 @@ use std::net::TcpStream;
 use std::io::Read;
 use std::sync::Arc;
 
-use super::forwarder::forward_http_request;
-use super::tunnel::handle_https_tunnel;
+use super::http::forward_http_request;
+use super::https::handle_https_tunnel;
 use crate::utils::parsing::extract_host;
 
 use crate::utils::responses::send_403_forbidden;
-use crate::utils::host_filtering::Blacklist;
 
-pub fn handle_client_connection(mut client_stream: TcpStream, blacklist: Arc<Blacklist>) {
+use crate::utils::host_filtering::Blacklist;
+use crate::proxy::cache::HttpCache;
+
+
+pub fn handle_client_connection(mut client_stream: TcpStream, blacklist: Arc<Blacklist>, cache: Arc<HttpCache>) {
     let mut buffer = [0u8; 8192];
 
     match client_stream.read(&mut buffer) {
@@ -39,7 +42,7 @@ pub fn handle_client_connection(mut client_stream: TcpStream, blacklist: Arc<Bla
                     if request_str.starts_with("CONNECT") {
                         let _ = handle_https_tunnel(&request_str, client_stream);
                     } else {
-                        forward_http_request(host, &buffer[..bytes_read], client_stream);
+                        forward_http_request(host, &buffer[..bytes_read], client_stream, Arc::clone(&cache));
                     }
                 },
                 None => {

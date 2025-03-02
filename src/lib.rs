@@ -5,8 +5,9 @@ pub mod cli {
 pub mod proxy {
     pub mod listener;
     mod handler;
-    mod forwarder;
-    mod tunnel;
+    mod http;
+    mod https;
+    mod cache;
 }
 
 pub mod utils{

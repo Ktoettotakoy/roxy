@@ -10,7 +10,7 @@ impl Blacklist {
     /// Creates a new Blacklist instance with some default blocked hosts
     pub fn new() -> Self {
         let blocked = HashSet::from([
-            "httpforever.com".to_string(),
+            // "httpforever.com".to_string(),
             "example.com".to_string(),
         ]);
 
