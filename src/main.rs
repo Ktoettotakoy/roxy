@@ -21,14 +21,16 @@ fn main() {
         }
     };
 
-    // Create clone for command listener thread
+    // Create clones for command listener thread
     let blacklist_clone_cmd = Arc::clone(&blacklist);
     let cache_clone_cmd = Arc::clone(&cache);
+    // Create a thread for commands
     let command_thread = thread::spawn(move || command_listener(blacklist_clone_cmd, cache_clone_cmd));
 
-    // Create clone for proxy thread
+    // Create clones for proxy thread
     let blacklist_clone_proxy = Arc::clone(&blacklist);
     let cache_clone_proxy = Arc::clone(&cache);
+    // Create a thread for proxy listener
     let proxy_thread = thread::spawn(move || start_proxy(6505, blacklist_clone_proxy, cache_clone_proxy));
 
     // Wait for proxy thread to finish (which it won't since it runs indefinitely)

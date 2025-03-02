@@ -70,7 +70,7 @@ impl CacheEntry {
                 // This is just a placeholder
                 if expires != "0" && !expires.is_empty() {
                     // Set some arbitrary expiration as example
-                    expires_at = Some(now + 3600); // 1 hour
+                    expires_at = Some(now + 5); // 20 seconds
                 }
             }
         } else {
@@ -90,16 +90,16 @@ impl CacheEntry {
 
     /// Checks if this cache entry is still valid
     pub fn is_valid(&self) -> bool {
-
         // ideally should work, but something is off
-        // if let Some(expires_at) = self.expires_at {
-        //     let now = SystemTime::now()
-        //         .duration_since(UNIX_EPOCH)
-        //         .unwrap_or_default()
-        //         .as_secs();
+        if let Some(expires_at) = self.expires_at {
+            println!("Expires at: {}", expires_at);
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs();
 
-        //     return now < expires_at;
-        // }
+            return now < expires_at;
+        }
         // No expiration time specified, consider valid
         true
     }
@@ -144,7 +144,7 @@ impl Default for CacheConfig {
         CacheConfig {
             l1_max_size: 1000,
             l1_default_ttl: 20,
-            promotion_threshold: 3,
+            promotion_threshold: 5,
             redis_url: "redis://127.0.0.1/".to_string(),
         }
     }
@@ -193,6 +193,7 @@ impl HttpCache {
 
     /// Get an item from cache (either L1 or L2)
     pub fn get(&self, host: &str, request_headers: &HashMap<String, String>) -> Option<CacheEntry> {
+
         // First try L1 cache (fast path)
         {
             let mut l1_entries = match self.l1_entries.write() {
@@ -230,6 +231,7 @@ impl HttpCache {
                 if entry.matches_conditional_headers(request_headers) {
                     // Update hit counter for potential promotion
                     self.increment_hit_counter(host);
+                    println!("Returning from L2");
                     return Some(entry);
                 }
 
@@ -305,9 +307,9 @@ impl HttpCache {
             return Ok(());
         }
 
-        // Store in both caches
+        // Store in cache
         self.put_l2(host, entry.clone())?;
-        self.put_l1(host, entry);
+        // self.put_l1(host, entry);
 
         Ok(())
     }
@@ -343,6 +345,20 @@ impl HttpCache {
             let _: () = con.set(host, serialized_entry)?;
         }
 
+        // Increment hit counter to track access frequency
+        self.increment_hit_counter(host);
+
+        // Check if this entry qualifies for promotion to L1
+        {
+            let hit_counters = self.hit_counters.read().unwrap();
+            if let Some(&hit_count) = hit_counters.get(host) {
+                if hit_count >= self.config.promotion_threshold {
+                    // Move entry from L2 to L1
+                    println!("Promoting {} to L1 cache", host);
+                    self.put_l1(host, entry);
+                }
+            }
+        }
         Ok(())
     }
 
