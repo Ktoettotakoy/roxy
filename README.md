@@ -2,6 +2,8 @@
 
 ## To start
 ```
+Make sure that redis-server is running
+
 sudo cargo build
 sudo ./target/debug/roxy
 Safari -> Settings -> Advanced -> Change Settings -> Web Proxy (HTTP)/S
