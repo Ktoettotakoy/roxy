@@ -4,6 +4,9 @@ use std::io;
 use std::io::Write;
 use std::sync::Arc;
 
+/// Module for adding commands to the manager console
+
+
 pub fn command_listener(blacklist: Arc<Blacklist>, cache: Arc<HttpCache>) {
     loop {
         print!("> "); // Show prompt
@@ -40,7 +43,7 @@ pub fn command_listener(blacklist: Arc<Blacklist>, cache: Arc<HttpCache>) {
                 println!("🔴 Exiting...");
                 break;
             }
-            _ => println!("❌ Unknown command. Use: add <host>, remove <host>, list, exit"),
+            _ => println!("❌ Unknown command. Use: add <host>, remove <host>, list, clear, exit"),
         }
     }
 }

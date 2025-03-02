@@ -4,9 +4,9 @@
 ```
 sudo cargo build
 sudo ./target/debug/roxy
-Safari -> Settings -> Advanced -> Change Settings -> Web Proxy (HTTP)
+Safari -> Settings -> Advanced -> Change Settings -> Web Proxy (HTTP)/S
 - host: 127.0.0.1
-- port: 80
+- port: 6505
 ```
 Note that you have to turn off the proxy when **roxy** is not running
 
@@ -14,17 +14,17 @@ folder structure
 ```
 src/
 │── main.rs                   # Entry point, starts the proxy
+│── cli/
+│   │── console.r             # For commands
 │── proxy/
-│   ├── mod.rs                # Proxy module
 │   ├── listener.rs           # Listens for incoming connections
 │   ├── handler.rs            # Handles HTTP and HTTPS requests
-│   ├── forwarder.rs          # Forwards HTTP requests to real servers
-│   ├── tunnel.rs             # Handles HTTPS CONNECT tunneling
+│   ├── http.rs               # Forwards HTTP requests to real servers
+│   ├── https.rs              # Handles HTTPS CONNECT tunneling
+│   │── cache.rs              # Handles cache
 │── utils/
-│   ├── mod.rs                # Utility module
 │   ├── parsing.rs            # Parses HTTP requests, extracts hosts
+│   │── host_filtering.rs     # Handles blacklisting of webpages
+│   │── responses.rs          # Provides several predefined responses (e.g 403)
 │   ├── logging.rs            # Handles logging and debugging
 ```
-
-look at later, refactor to this level!
-https://dzone.com/articles/writing-a-modern-https-tunnel-in-rust?fromrel=true

@@ -7,6 +7,8 @@ use crate::utils::parsing::parse_http_request;
 use crate::utils::parsing::parse_http_response;
 use crate::proxy::cache::HttpCache;
 
+/// # Forwards HTTP requests to real servers
+
 pub fn forward_http_request(host: String, buffer: &[u8], mut client_stream: TcpStream, cache: Arc<HttpCache>) {
     let request_str = String::from_utf8_lossy(buffer);
     let request_headers = parse_http_request(&request_str).unwrap().headers;
@@ -14,7 +16,7 @@ pub fn forward_http_request(host: String, buffer: &[u8], mut client_stream: TcpS
     println!("Forwarding HTTP request to: {}", host);
 
     let start_total = Instant::now();  // Start total timing
-    // ✅ Measure Cache Lookup Time
+    // Measure Cache Lookup Time
     let start_cache = Instant::now();
     if let Some(cached_entry) = cache.get(&host, &request_headers) {
         let cache_time = start_cache.elapsed();
@@ -34,7 +36,7 @@ pub fn forward_http_request(host: String, buffer: &[u8], mut client_stream: TcpS
     let cache_time = start_cache.elapsed();
     println!("Cache miss (lookup time: {:.2?})", cache_time);
 
-    // ✅ Measure Request Forwarding Time
+    // Measure Request Forwarding Time
     let start_forward = Instant::now();
     match TcpStream::connect(&host) {
         Ok(mut server_stream) => {

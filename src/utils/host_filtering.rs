@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
+/// module allowing to blacklist add/remove/list hosts
+
 /// Thread-safe blacklist using Arc + Mutex
 pub struct Blacklist {
     blocked: Arc<Mutex<HashSet<String>>>,

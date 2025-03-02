@@ -11,6 +11,7 @@ use crate::utils::responses::send_403_forbidden;
 use crate::utils::host_filtering::Blacklist;
 use crate::proxy::cache::HttpCache;
 
+///  Handles HTTP and HTTPS requests
 
 pub fn handle_client_connection(mut client_stream: TcpStream, blacklist: Arc<Blacklist>, cache: Arc<HttpCache>) {
     let mut buffer = [0u8; 8192];

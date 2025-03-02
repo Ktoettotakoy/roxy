@@ -1,6 +1,8 @@
 use std::io::Write;
 use std::net::TcpStream;
 
+/// Module for HTTP responses, like 403, I had to do more than just 403, but no time (I was sick)
+
 /// Sends a generic HTTP response
 fn send_response(client_stream: &mut TcpStream, status_line: &str, body: &str) {
     let response = format!(

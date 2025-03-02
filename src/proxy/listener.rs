@@ -6,6 +6,7 @@ use super::handler::handle_client_connection;
 use crate::utils::host_filtering::Blacklist;
 use crate::proxy::cache::HttpCache;
 
+/// # Listens for incoming connections
 
 pub fn start_proxy(port: u16, blacklist: Arc<Blacklist>, cache: Arc<HttpCache>) {
     let listener = TcpListener::bind(("0.0.0.0", port)).expect("Failed to bind to port");

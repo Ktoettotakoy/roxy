@@ -5,6 +5,14 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use redis::{Commands, Connection, RedisError};
 use serde::{Serialize, Deserialize};
 
+/// Handles cache it has 3 important structs:
+// CacheEntry - saved object
+// CacheConfig - config for HttpCache
+// HttpCache - handles objects that operate with data and some metadata to them
+
+
+
+
 /// Represents a cached HTTP response with associated metadata.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CacheEntry {
@@ -124,7 +132,9 @@ impl CacheEntry {
     }
 }
 
+///
 /// Configuration for the HTTP cache
+///
 pub struct CacheConfig {
     /// Maximum size of the in-memory (L1) cache
     pub l1_max_size: usize,
@@ -150,9 +160,11 @@ impl Default for CacheConfig {
     }
 }
 
+///
 /// A two-level HTTP cache with L1 (in-memory) and L2 (Redis) storage
+///
 pub struct HttpCache {
-    /// L1 cache entries with access count for LRU implementation
+    /// L1 cache entries with access count for LRU implementation (not implemented)
     l1_entries: Arc<RwLock<HashMap<String, (CacheEntry, usize)>>>,
 
     /// Track hits for potential promotion from L2 to L1
@@ -164,7 +176,7 @@ pub struct HttpCache {
     /// Cache configuration
     config: CacheConfig,
 
-    /// Queue for LRU eviction
+    /// Queue for LRU eviction (not implemented, but ready)
     lru_queue: Arc<Mutex<VecDeque<String>>>,
 }
 
@@ -349,20 +361,20 @@ impl HttpCache {
         self.increment_hit_counter(host);
 
         // Check if this entry qualifies for promotion to L1
-        {
-            let hit_counters = self.hit_counters.read().unwrap();
-            if let Some(&hit_count) = hit_counters.get(host) {
-                if hit_count >= self.config.promotion_threshold {
-                    // Move entry from L2 to L1
-                    println!("Promoting {} to L1 cache", host);
-                    self.put_l1(host, entry);
-                }
-            }
-        }
+        // {
+        //     let hit_counters = self.hit_counters.read().unwrap();
+        //     if let Some(&hit_count) = hit_counters.get(host) {
+        //         if hit_count >= self.config.promotion_threshold {
+        //             // Move entry from L2 to L1
+        //             println!("Promoting {} to L1 cache", host);
+        //             self.put_l1(host, entry);
+        //         }
+        //     }
+        // }
         Ok(())
     }
 
-    /// Store a response in L1 (in-memory) cache with LRU eviction
+    /// Store a response in L1 (in-memory) cache without LRU eviction
     fn put_l1(&self, host: &str, entry: CacheEntry) {
         let mut l1_entries = match self.l1_entries.write() {
             Ok(guard) => guard,
@@ -374,7 +386,7 @@ impl HttpCache {
             Err(poisoned) => poisoned.into_inner(),
         };
 
-        // Check if we need to evict an entry
+        // Check if we need to evict an entry (works)
         if l1_entries.len() >= self.config.l1_max_size {
             // Evict the least recently used entry
             if let Some(oldest_host) = lru_queue.pop_front() {
@@ -386,7 +398,7 @@ impl HttpCache {
         l1_entries.insert(host.to_string(), (entry.clone(), 1));
         lru_queue.push_back(host.to_string());
 
-        // Schedule removal from L1 cache after TTL
+        // Schedule removal from L1 cache after TTL (Doesn't really work)
         if let Some(expires_at) = entry.expires_at {
             let host_clone = host.to_string();
             let l1_entries_clone = self.l1_entries.clone();

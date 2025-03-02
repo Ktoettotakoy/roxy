@@ -9,6 +9,7 @@ use std::io::ErrorKind;
 
 use crate::utils::parsing::extract_host;
 
+/// # Handles HTTPS CONNECT tunneling
 
 pub fn handle_https_tunnel(request_str: &str, mut client_stream: TcpStream) -> io::Result<()> {
     if let Some(host) = extract_host(request_str) {

@@ -64,6 +64,10 @@ pub struct HttpResponse {
 
 
 /// Takes the response and transforms it into a struct
+/// # Parameters
+/// * raw_response - preferably str slice of HTTP request
+///
+/// - returns Option<HttpResponse>
 pub fn parse_http_response(raw_response: &str) -> Option<HttpResponse> {
     let mut lines = raw_response.lines();
 
@@ -106,6 +110,10 @@ pub fn parse_http_response(raw_response: &str) -> Option<HttpResponse> {
 
 
 /// Takes the request and transforms it into a struct
+/// # Parameters
+/// * raw_request - preferably str slice of HTTP request
+///
+/// - returns Option<HttpRequest>
 pub fn parse_http_request(raw_request: &str) -> Option<HttpRequest> {
     let mut lines = raw_request.lines();
 
