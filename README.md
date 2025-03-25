@@ -1,4 +1,5 @@
 # Roxy
+Proxy that can peek into request traffic, handle http/s communication, blacklist specified urls, cache http responses (L2 Redis, L1 HashMap) 
 
 ## To start
 ```
