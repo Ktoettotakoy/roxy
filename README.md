@@ -1,5 +1,6 @@
 # Roxy
-Proxy that can peek into request traffic, handle http/s communication, blacklist specified urls, cache http responses (L2 Redis, L1 HashMap) 
+Proxy that can peek into request traffic, handle http/s communication, blacklist specified urls, cache http responses (L2 Redis, L1 HashMap).
+I plan to play around a bit more with it and add some other features
 
 ## To start
 ```
@@ -13,7 +14,7 @@ Safari -> Settings -> Advanced -> Change Settings -> Web Proxy (HTTP)/S
 ```
 Note that you have to turn off the proxy when **roxy** is not running
 
-folder structure
+Project structure
 ```
 src/
 │── main.rs                   # Entry point, starts the proxy
